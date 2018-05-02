@@ -12,7 +12,7 @@ import {
 import { AppLoading, Asset, LinearGradient, BlurView } from 'expo'
 import { TabViewAnimated, TabBar } from 'react-native-tab-view'
 
-// import Header from './components/header'
+import Header from './components/header'
 import ContactsList from './components/contacts_list'
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window')
@@ -31,7 +31,15 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
+    bottom: 0,
     zIndex: 1
+  },
+  headerActionsRow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100
   },
   tabBar: {
     backgroundColor: '#fff',
@@ -82,8 +90,11 @@ const styles = StyleSheet.create({
     width: '100%'
   },
   blur: {
-    zIndex: 10,
-    ...StyleSheet.absoluteFillObject
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: 0
   }
 })
 
@@ -200,6 +211,9 @@ export default class App extends Component {
 
     return (
       <View style={{ zIndex: 1, backgroundColor: '#fff' }}>
+        <View style={styles.headerActionsRow}>
+          <Header />
+        </View>
         <Animated.View style={[styles.header, { transform: [{ translateY: imageOffset }] }]}>
           <StatusBar barStyle='light-content' />
           <Animated.View style={styles.titleContainer}>
@@ -227,9 +241,9 @@ export default class App extends Component {
                 style={styles.gradient}
               />
             </ImageBackground>
-            <Animated.View style={[styles.blur, { opacity: blurOpacity }]}>
+            <Animated.View style={[styles.blur, { opacity: blurOpacity, zIndex: 10 }]}>
               <BlurView
-                style={{ ...StyleSheet.absoluteFillObject }}
+                style={styles.blur}
                 viewRef={this.backgroundImage}
                 blurType='dark'
                 blurAmount={5}
