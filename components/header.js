@@ -2,15 +2,6 @@ import React from 'react'
 import { View, StyleSheet, TouchableOpacity, Image } from 'react-native'
 
 const styles = StyleSheet.create({
-  container: {
-    width: 28,
-    height: 28,
-    borderRadius: 16,
-    overflow: 'hidden',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255, 0.75)'
-  },
   wrapper: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -26,6 +17,15 @@ const styles = StyleSheet.create({
     paddingRight: 15,
     paddingBottom: 8
   },
+  container: {
+    width: 28,
+    height: 28,
+    borderRadius: 16,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255, 0.75)'
+  },
   leftButtons: { flex: 1 },
   rightButtons: { flex: 1, alignItems: 'flex-end' }
 })
@@ -34,14 +34,14 @@ const Header = (props) => {
   return (
     <View style={styles.wrapper}>
       <View style={styles.leftButtons}>
-        <TouchableOpacity {...props} style={styles.container}>
+        <TouchableOpacity style={styles.container} onPress={() => console.log('go back!')}>
           <View style={{ paddingRight: 2 }}>
             <Image source={require('../img/back-icon-dark.png')} />
           </View>
         </TouchableOpacity>
       </View>
       <View style={styles.rightButtons}>
-        <TouchableOpacity {...props} style={styles.container}>
+        <TouchableOpacity style={styles.container} onPress={() => console.log('see more!')}>
           <View style={{ paddingRight: 2 }}>
             <Image source={require('../img/more-icon-dark.png')} />
           </View>

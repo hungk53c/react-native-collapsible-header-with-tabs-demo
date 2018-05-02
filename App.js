@@ -4,22 +4,25 @@ import {
   StyleSheet,
   Text,
   View,
-  Dimensions,
   StatusBar,
   ImageBackground,
-  ScrollView
+  ScrollView,
+  Dimensions
 } from 'react-native'
-import { Font, AppLoading, Asset, Constants } from 'expo'
+import { AppLoading, Asset, LinearGradient, BlurView } from 'expo'
 import { TabViewAnimated, TabBar } from 'react-native-tab-view'
 
 // import Header from './components/header'
+import ContactsList from './components/contacts_list'
+
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window')
 
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView)
-const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
-const HEADER_HEIGHT = 350
-const COLLAPSED_HEIGHT = 60 + Constants.statusBarHeight
-const SCROLL_HEIGHT = HEADER_HEIGHT - COLLAPSED_HEIGHT
+const HEADER_HEIGHT = (SCREEN_WIDTH - 50)
+const COLLAPSED_HEIGHT = 82
+const SCROLL_HEIGHT = (HEADER_HEIGHT - COLLAPSED_HEIGHT)
+
 const TAB_BAR_HEIGHT = 50
 
 const styles = StyleSheet.create({
@@ -30,23 +33,71 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 1
   },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)'
-  },
   tabBar: {
     backgroundColor: '#fff',
     elevation: 0,
     shadowOpacity: 0,
-    height: TAB_BAR_HEIGHT
+    height: TAB_BAR_HEIGHT,
+    marginTop: TAB_BAR_HEIGHT + 35
   },
   scrollViewContent: {
-    paddingTop: HEADER_HEIGHT + TAB_BAR_HEIGHT + 20, // offset image + height of tabs + a little breathing room
-    marginHorizontal: 15
+    paddingTop: (HEADER_HEIGHT - COLLAPSED_HEIGHT) + 10,
+    marginHorizontal: 15,
+    zIndex: 99,
+    minHeight: (SCREEN_HEIGHT + SCROLL_HEIGHT) - COLLAPSED_HEIGHT
+  },
+  titleContainer: {
+    flex: 1,
+    paddingHorizontal: 20,
+    flexDirection: 'column',
+    justifyContent: 'flex-end',
+    alignItems: 'flex-start',
+    backgroundColor: 'transparent',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    paddingBottom: 16,
+    height: HEADER_HEIGHT,
+    zIndex: 1
+  },
+  titleStyle: {
+    fontSize: 34,
+    lineHeight: 40,
+    letterSpacing: 0.41,
+    color: '#fff',
+    fontWeight: '700',
+    fontStyle: 'normal'
+  },
+  subtitleStyle: {
+    fontSize: 17,
+    lineHeight: 22,
+    letterSpacing: -0.41,
+    fontWeight: '600',
+    color: 'rgba(255,255,255, 0.8)'
+  },
+  gradient: {
+    position: 'absolute',
+    height: '100%',
+    width: '100%'
+  },
+  blur: {
+    zIndex: 10,
+    ...StyleSheet.absoluteFillObject
   }
 })
 
 export default class App extends Component {
+  constructor(props) {
+    super(props)
+
+    this.tabsY = this.state.scrollY.interpolate({
+      inputRange: [0, SCROLL_HEIGHT],
+      outputRange: [SCROLL_HEIGHT, 0],
+      extrapolateRight: 'clamp'
+    })
+  }
+
   state = {
     index: 0,
     scrollY: new Animated.Value(0),
@@ -58,29 +109,43 @@ export default class App extends Component {
     ]
   }
 
-  _cacheResourcesAsync = async () => {
+  cacheResourcesAsync = async () => {
     return Promise.all([
-      Asset.fromModule(require('./img/kendrick.jpg')).downloadAsync(),
-      Font.loadAsync({
-        Roboto: require('native-base/Fonts/Roboto.ttf'),
-        Roboto_medium: require('native-base/Fonts/Roboto_medium.ttf'),
-        Ionicons: require('@expo/vector-icons/fonts/Ionicons.ttf')
-      })
+      Asset.fromModule(require('./img/kendrick.png')).downloadAsync()
     ])
   }
 
-  renderScene = ({ route }) => {
-    let content = null
+  alignScrollViews = (view, y) => {
+    if (y <= SCROLL_HEIGHT + 20) {
+      if (view !== 'earlyLife') {
+        this.earlyLifeScrollV.getNode().scrollTo({ x: 0, y, animated: false })
+      }
+      if (view !== 'career') {
+        this.careerScrollV.getNode().scrollTo({ x: 0, y, animated: false })
+      }
+      if (view !== 'albums') {
+        this.albumScrollV.getNode().scrollTo({ x: 0, y, animated: false })
+      }
+    }
+  }
 
-    switch (route.key.toString()) {
+  renderScene = ({ route }) => {
+    const routeKey = route.key.toString()
+    let refFunc = null
+    let tabToCheck = 0
+
+    switch (routeKey) {
       case 'earlyLife':
-        content = <Text>Albums</Text>
+        refFunc = (scrollView) => { this.earlyLifeScrollV = scrollView }
+        tabToCheck = 0
         break
       case 'career':
-        content = <Text>Career</Text>
+        refFunc = (scrollView) => { this.careerScrollV = scrollView }
+        tabToCheck = 1
         break
       case 'albums':
-        content = <Text>Albums</Text>
+        refFunc = (scrollView) => { this.albumScrollV = scrollView }
+        tabToCheck = 2
         break
       default:
         return null
@@ -88,42 +153,97 @@ export default class App extends Component {
 
     return (
       <AnimatedScrollView
-        scrollEventThrottle={1}
+        showsVerticalScrollIndicator={false}
+        ref={refFunc}
+        scrollEventThrottle={6}
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: this.state.scrollY } } }],
-          { useNativeDriver: true }
+          {
+            useNativeDriver: true,
+            listener: (event) => {
+              const y = event.nativeEvent.contentOffset.y
+              if (this.state.index === tabToCheck) {
+                this.alignScrollViews(routeKey, y)
+              }
+            }
+          }
         )}
         contentContainerStyle={styles.scrollViewContent}
       >
         <View style={{ backgroundColor: '#fff', flex: 1 }}>
-          {content}
+          <ContactsList />
         </View>
       </AnimatedScrollView>
     )
   }
 
   renderHeader = (props) => {
-    const img = require('./img/kendrick.jpg')
+    const img = require('./img/kendrick.png')
 
-    const translateY = this.state.scrollY.interpolate({
-      inputRange: [0, SCROLL_HEIGHT],
+    const imageOffset = this.state.scrollY.interpolate({
+      inputRange: [0, SCROLL_HEIGHT + 4],
       outputRange: [0, -SCROLL_HEIGHT],
+      extrapolateRight: 'clamp'
+    })
+
+    const imgScale = this.state.scrollY.interpolate({
+      inputRange: [-15, 0],
+      outputRange: [1.1, 1],
+      extrapolateRight: 'clamp'
+    })
+
+    const blurOpacity = this.state.scrollY.interpolate({
+      inputRange: [0, SCROLL_HEIGHT],
+      outputRange: [0, 1],
       extrapolate: 'clamp'
     })
 
     return (
-      <Animated.View style={[styles.header, { transform: [{ translateY }] }]}>
-        <StatusBar barStyle='light-content' />
-        <ImageBackground source={img} style={{ height: HEADER_HEIGHT }}>
-          <View style={styles.overlay} />
-        </ImageBackground>
+      <View style={{ zIndex: 1, backgroundColor: '#fff' }}>
+        <Animated.View style={[styles.header, { transform: [{ translateY: imageOffset }] }]}>
+          <StatusBar barStyle='light-content' />
+          <Animated.View style={styles.titleContainer}>
+            <Text style={styles.titleStyle}>
+              Kendrick Lamar
+            </Text>
+            <Text style={styles.subtitleStyle}>
+              Rapper and Songwriter
+            </Text>
+          </Animated.View>
+          <Animated.View style={{ opacity: 1, transform: [{ scale: imgScale }] }}>
+            <ImageBackground
+              source={img}
+              ref={(ref) => { this.backgroundImage = ref }}
+              style={{ height: HEADER_HEIGHT, width: '100%' }}
+              imageStyle={{ height: HEADER_HEIGHT, width: '100%' }}
+              resizeMode='cover'
+              resizeMethod='resize'
+            >
+              <LinearGradient
+                start={{ x: 0.5, y: 0 }}
+                end={{ x: 0.5, y: 1 }}
+                locations={[0, 0.2, 0.6, 1.0]}
+                colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.0)', 'rgba(0,0,0,0.0)', 'rgba(0,0,0,0.6)']}
+                style={styles.gradient}
+              />
+            </ImageBackground>
+            <Animated.View style={[styles.blur, { opacity: blurOpacity }]}>
+              <BlurView
+                style={{ ...StyleSheet.absoluteFillObject }}
+                viewRef={this.backgroundImage}
+                blurType='dark'
+                blurAmount={5}
+              />
+            </Animated.View>
+          </Animated.View>
+        </Animated.View>
         <TabBar
           {...props}
-          style={styles.tabBar}
+          style={[styles.tabBar, { transform: [{ translateY: this.tabsY }] }]}
           labelStyle={{ color: '#000' }}
           useNativeDriver
         />
-      </Animated.View>
+      </View>
     )
   }
 
@@ -131,7 +251,7 @@ export default class App extends Component {
     if (!this.state.isAppLoading) {
       return (
         <AppLoading
-          startAsync={this._cacheResourcesAsync}
+          startAsync={this.cacheResourcesAsync}
           onFinish={() => this.setState({ isReady: true })}
           onError={console.warn}
         />
@@ -140,12 +260,13 @@ export default class App extends Component {
 
     return (
       <TabViewAnimated
-        style={{ flex: 1 }}
+        style={{ flex: 1, position: 'relative' }}
         navigationState={this.state}
         renderScene={this.renderScene}
         renderHeader={this.renderHeader}
         onIndexChange={index => this.setState({ index })}
         initialLayout={{ height: 0, width: SCREEN_WIDTH }}
+        useNativeDriver
       />
     )
   }
