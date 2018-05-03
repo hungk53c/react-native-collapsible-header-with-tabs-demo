@@ -6,6 +6,7 @@ import {
   View,
   StatusBar,
   ImageBackground,
+  Image,
   ScrollView,
   Dimensions
 } from 'react-native'
@@ -13,9 +14,11 @@ import { AppLoading, Asset, LinearGradient, BlurView } from 'expo'
 import { TabViewAnimated, TabBar } from 'react-native-tab-view'
 
 import Header from './components/header'
-import ContactsList from './components/contacts_list'
+import EarlyLife from './components/early_life'
+import Career from './components/career'
+import Albums from './components/albums'
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window')
+const { width: SCREEN_WIDTH } = Dimensions.get('window')
 
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView)
 
@@ -51,8 +54,7 @@ const styles = StyleSheet.create({
   scrollViewContent: {
     paddingTop: (HEADER_HEIGHT - COLLAPSED_HEIGHT) + 10,
     marginHorizontal: 15,
-    zIndex: 99,
-    minHeight: (SCREEN_HEIGHT + SCROLL_HEIGHT) - COLLAPSED_HEIGHT
+    zIndex: 99
   },
   titleContainer: {
     flex: 1,
@@ -122,7 +124,14 @@ export default class App extends Component {
 
   cacheResourcesAsync = async () => {
     return Promise.all([
-      Asset.fromModule(require('./img/kendrick.png')).downloadAsync()
+      Asset.fromModule(require('./img/kendrick.png')).downloadAsync(),
+      Asset.fromModule(require('./img/back-icon-dark.png')).downloadAsync(),
+      Asset.fromModule(require('./img/more-icon-dark.png')).downloadAsync(),
+      Image.prefetch('https://upload.wikimedia.org/wikipedia/commons/5/53/KendrickLive.jpg'),
+      Image.prefetch('http://i0.kym-cdn.com/photos/images/newsfeed/001/279/466/dba.png'),
+      Image.prefetch('http://www.eargrub.com/wp-content/uploads/2015/03/kdotduckworth1-520x220.jpg'),
+      Image.prefetch('http://www.klasmag.com/wp-content/uploads/2017/04/image001.jpg'),
+      Image.prefetch('https://s3.amazonaws.com/rapgenius/1340263356_20110628-SECTION801a.jpg')
     ])
   }
 
@@ -144,19 +153,23 @@ export default class App extends Component {
     const routeKey = route.key.toString()
     let refFunc = null
     let tabToCheck = 0
+    let content = null
 
     switch (routeKey) {
       case 'earlyLife':
         refFunc = (scrollView) => { this.earlyLifeScrollV = scrollView }
         tabToCheck = 0
+        content = <EarlyLife />
         break
       case 'career':
         refFunc = (scrollView) => { this.careerScrollV = scrollView }
         tabToCheck = 1
+        content = <Career />
         break
       case 'albums':
         refFunc = (scrollView) => { this.albumScrollV = scrollView }
         tabToCheck = 2
+        content = <Albums />
         break
       default:
         return null
@@ -182,7 +195,7 @@ export default class App extends Component {
         contentContainerStyle={styles.scrollViewContent}
       >
         <View style={{ backgroundColor: '#fff', flex: 1 }}>
-          <ContactsList />
+          {content}
         </View>
       </AnimatedScrollView>
     )

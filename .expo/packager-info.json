@@ -1,8 +1,8 @@
 {
-  "expoServerPort": 19001,
-  "packagerPort": 19002,
-  "packagerPid": 81350,
-  "expoServerNgrokUrl": "https://8u-ur8.austenlacy.react-native-collapsible-header-with-tabs-demo.exp.direct",
-  "packagerNgrokUrl": "https://packager.8u-ur8.austenlacy.react-native-collapsible-header-with-tabs-demo.exp.direct",
-  "ngrokPid": 81363
+  "expoServerPort": null,
+  "packagerPort": null,
+  "packagerPid": null,
+  "expoServerNgrokUrl": null,
+  "packagerNgrokUrl": null,
+  "ngrokPid": null
 }
